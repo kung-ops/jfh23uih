@@ -1,0 +1,46 @@
+workflows:
+  oldweb-ios:
+    name: OldWeb iOS (unsigned IPA)
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      xcode: latest
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: '*'
+          include: true
+    scripts:
+      - name: Install XcodeGen
+        script: brew install xcodegen
+      - name: Make the Xcode project
+        script: |
+          cd "$CM_BUILD_DIR"
+          xcodegen generate
+      - name: Build the app (no signing)
+        script: |
+          cd "$CM_BUILD_DIR"
+          set -o pipefail
+          xcodebuild \
+            -project OldWeb.xcodeproj \
+            -scheme OldWeb \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build | tee /tmp/xcodebuild.log
+      - name: Pack OldWeb.ipa
+        script: |
+          cd "$CM_BUILD_DIR"
+          rm -rf Payload OldWeb.ipa
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/OldWeb.app Payload/
+          zip -qry OldWeb.ipa Payload
+          ls -lh OldWeb.ipa
+    artifacts:
+      - OldWeb.ipa
+      - /tmp/xcodebuild.log

@@ -1,0 +1,9 @@
+build/
+Payload/
+*.ipa
+OldWeb.xcodeproj/
+OldWeb/Info.plist
+pc-server/node_modules/
+pc-server/edge-profile*/
+pc-server/owpass.txt
+pc-server/owid.txt
